@@ -33,7 +33,13 @@
         "@radix-ui/react-toggle": "^1.1.2",
         "@radix-ui/react-toggle-group": "^1.1.2",
         "@radix-ui/react-tooltip": "^1.1.8",
+        "@tanstack/react-query": "^5.67.3",
+        "@trpc/client": "^11.0.0-rc.828",
+        "@trpc/next": "^11.0.0-rc.828",
+        "@trpc/react-query": "^11.0.0-rc.828",
+        "@trpc/server": "^11.0.0-rc.828",
         "class-variance-authority": "^0.7.1",
+        "client-only": "^0.0.1",
         "clsx": "^2.1.1",
         "cmdk": "1.0.0",
         "concurrently": "^9.1.2",
@@ -51,6 +57,7 @@
         "react-hook-form": "^7.54.2",
         "react-resizable-panels": "^2.1.7",
         "recharts": "^2.15.1",
+        "server-only": "^0.0.1",
         "sonner": "^2.0.1",
         "svix": "^1.61.4",
         "tailwind-merge": "^3.0.2",
@@ -395,6 +402,18 @@
     "@tailwindcss/oxide-win32-x64-msvc": ["@tailwindcss/oxide-win32-x64-msvc@4.0.13", "https://registry.npmmirror.com/@tailwindcss/oxide-win32-x64-msvc/-/oxide-win32-x64-msvc-4.0.13.tgz", { "os": "win32", "cpu": "x64" }, "sha512-sOEc4iCanp1Yqyeu9suQcEzfaUcHnqjBUgDg0ZXpjUMUwdSi37S1lu1RGoV1BYInvvGu3y3HHTmvsSfDhx2L8w=="],
 
     "@tailwindcss/postcss": ["@tailwindcss/postcss@4.0.13", "https://registry.npmmirror.com/@tailwindcss/postcss/-/postcss-4.0.13.tgz", { "dependencies": { "@alloc/quick-lru": "^5.2.0", "@tailwindcss/node": "4.0.13", "@tailwindcss/oxide": "4.0.13", "lightningcss": "1.29.2", "postcss": "^8.4.41", "tailwindcss": "4.0.13" } }, "sha512-zTmnPGDYb2HKClTBTBwB+lLQH+Rq4etnQXFXs2lisRyXryUnoJIBByFTljkaK9F1d7o14h6t4NJIlfbZuOHR+A=="],
+
+    "@tanstack/query-core": ["@tanstack/query-core@5.67.3", "https://registry.npmmirror.com/@tanstack/query-core/-/query-core-5.67.3.tgz", {}, "sha512-pq76ObpjcaspAW4OmCbpXLF6BCZP2Zr/J5ztnyizXhSlNe7fIUp0QKZsd0JMkw9aDa+vxDX/OY7N+hjNY/dCGg=="],
+
+    "@tanstack/react-query": ["@tanstack/react-query@5.67.3", "https://registry.npmmirror.com/@tanstack/react-query/-/react-query-5.67.3.tgz", { "dependencies": { "@tanstack/query-core": "5.67.3" }, "peerDependencies": { "react": "^18 || ^19" } }, "sha512-u/n2HsQeH1vpZIOzB/w2lqKlXUDUKo6BxTdGXSMvNzIq5MHYFckRMVuFABp+QB7RN8LFXWV6X1/oSkuDq+MPIA=="],
+
+    "@trpc/client": ["@trpc/client@11.0.0-rc.828", "https://registry.npmmirror.com/@trpc/client/-/client-11.0.0-rc.828.tgz", { "peerDependencies": { "@trpc/server": "11.0.0-rc.828+322552736", "typescript": ">=5.7.2" } }, "sha512-pV2bELnPqH7S2R1wBH6OB7lOi61ELt8CEcvHuxVM2YhL4hP408tzKT0YvNBo4GVqc8So/1ncpXJyRJQG0o6rsQ=="],
+
+    "@trpc/next": ["@trpc/next@11.0.0-rc.828", "https://registry.npmmirror.com/@trpc/next/-/next-11.0.0-rc.828.tgz", { "peerDependencies": { "@tanstack/react-query": "^5.59.15", "@trpc/client": "11.0.0-rc.828+322552736", "@trpc/react-query": "11.0.0-rc.828+322552736", "@trpc/server": "11.0.0-rc.828+322552736", "next": "15.2.1", "react": ">=16.8.0", "react-dom": ">=16.8.0", "typescript": ">=5.7.2" }, "optionalPeers": ["@tanstack/react-query", "@trpc/react-query"] }, "sha512-Pyzyh0YM2DgYJHGI09oAinLF8ViRtUhAdcWVMr55sxGn1LPce0QD70K1WjvPRP2jvlRMaNRvD4nrqQ+c1hnBbA=="],
+
+    "@trpc/react-query": ["@trpc/react-query@11.0.0-rc.828", "https://registry.npmmirror.com/@trpc/react-query/-/react-query-11.0.0-rc.828.tgz", { "peerDependencies": { "@tanstack/react-query": "^5.67.1", "@trpc/client": "11.0.0-rc.828+322552736", "@trpc/server": "11.0.0-rc.828+322552736", "react": ">=18.2.0", "react-dom": ">=18.2.0", "typescript": ">=5.7.2" } }, "sha512-oir4OikvCEqbheswHZhKrXSz1hKvFcDFlc/NZ9zShMlosJtO585az0XRrGuwFvjVShP5YCRvzFb4shiJjw5PXA=="],
+
+    "@trpc/server": ["@trpc/server@11.0.0-rc.828", "https://registry.npmmirror.com/@trpc/server/-/server-11.0.0-rc.828.tgz", { "peerDependencies": { "typescript": ">=5.7.2" } }, "sha512-+dvcIcE5QPy52cz4rqwfUqk+WQDYAH3Xri+u2t0NdzIoo78fnL14if8oSZXAPU1bCmWGyR1k/0m5rSQ7AZaKlQ=="],
 
     "@types/d3-array": ["@types/d3-array@3.2.1", "https://registry.npmmirror.com/@types/d3-array/-/d3-array-3.2.1.tgz", {}, "sha512-Y2Jn2idRrLzUfAKV2LyRImR+y4oa2AntrgID95SHJxuMUrkNXmanDSed71sRNZysveJVt1hLLemQZIady0FpEg=="],
 
