@@ -1,9 +1,22 @@
-import { Button } from '@/components/ui/button'
-import Image from 'next/image'
-import React from 'react'
+import { HomeView } from "@/modules/home/ui/views/home-view";
+import { HydrateClient, trpc } from "@/trpc/server";
+import React from "react";
 
-const Home = async () => {
-  return <div>I will load videos here</div>
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  searchParams: Promise<{ categoryId?: string }>;
 }
 
-export default Home
+const Page = async ({ searchParams }: PageProps) => {
+  const { categoryId } = await searchParams;
+
+  void trpc.categories.getMany.prefetch();
+  return (
+    <HydrateClient>
+      <HomeView categoryId={categoryId} />
+    </HydrateClient>
+  );
+};
+
+export default Page;
