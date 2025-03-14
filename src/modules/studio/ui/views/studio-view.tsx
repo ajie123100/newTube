@@ -1,10 +1,16 @@
-import React from 'react'
-import { VideosSection } from '../section/videos-section'
+import React from "react";
+import { VideosSection } from "../section/videos-section";
 
 export const StudioView = () => {
   return (
-    <div>
+    <div className="flex flex-col gap-y-6 mt-2.5">
+      <div className="px-4">
+        <h1 className="text-2xl font-bold">Channel content</h1>
+        <p className="text-xs text-muted-foreground">
+          Manager your channel content and videos
+        </p>
+      </div>
       <VideosSection />
     </div>
-  )
-}
+  );
+};
