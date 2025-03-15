@@ -8,6 +8,11 @@ import {
   integer,
   pgEnum,
 } from "drizzle-orm/pg-core";
+import {
+  createInsertSchema,
+  createSelectSchema,
+  createUpdateSchema,
+} from "drizzle-zod";
 
 export const users = pgTable(
   "users",
@@ -43,10 +48,10 @@ export const categoriesRelations = relations(categories, ({ many }) => ({
   videos: many(videos),
 }));
 
-export const videoVisibility = pgEnum("video_visibility",[
+export const videoVisibility = pgEnum("video_visibility", [
   "private",
   "public",
-])
+]);
 
 export const videos = pgTable("videos", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -60,7 +65,8 @@ export const videos = pgTable("videos", {
   muxTrackStatus: text("mux_track_status"),
   thumbnailUrl: text("thumbnail_url"),
   previewUrl: text("preview_url"),
-  duration: integer("duration"),
+  duration: integer("duration").default(0).notNull(),
+  visibility: videoVisibility("visibility").default("private").notNull(),
   userId: uuid("user_id")
     .notNull()
     .references(() => users.id, {
@@ -72,6 +78,10 @@ export const videos = pgTable("videos", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+export const videoSelectSchema = createSelectSchema(videos); // 创建查询模式 作用：限制查询字段
+export const videoInsertSchema = createInsertSchema(videos); // 创建插入模式 作用：限制插入字段
+export const videoUpdateSchema = createUpdateSchema(videos); // 创建更新模式 作用：限制更新字段
 
 export const videoRelations = relations(videos, ({ one }) => ({
   user: one(users, { fields: [videos.userId], references: [users.id] }),

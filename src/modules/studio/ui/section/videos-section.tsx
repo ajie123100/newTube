@@ -1,6 +1,7 @@
 "use client";
 
 import { InfiniteScroll } from "@/components/infinite-scroll";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -13,18 +14,74 @@ import { DEFAULT_LIMIT } from "@/constants";
 import { snakeCaseToTitle } from "@/lib/utils";
 import { VideoThumbnail } from "@/modules/videos/ui/components/video-thumbnail";
 import { trpc } from "@/trpc/client";
-import { format, formatDate } from "date-fns";
+import { format } from "date-fns";
+import { Globe2Icon, LockIcon } from "lucide-react";
 import Link from "next/link";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 export const VideosSection = () => {
   return (
-    <Suspense fallback={null}>
+    <Suspense fallback={<VideosSectionSkeleton />}>
       <ErrorBoundary fallback={<p>Error...</p>}>
         <VideosSectionSuspense />
       </ErrorBoundary>
     </Suspense>
+  );
+};
+
+const VideosSectionSkeleton = () => {
+  return (
+    <>
+      <div className="border-y">
+        <Table>
+          <TableHeader>
+            <TableRow>
+              <TableHead className="pl-6 w-[510px] ">Video</TableHead>
+              <TableHead className="">Visibility</TableHead>
+              <TableHead className="">Status</TableHead>
+              <TableHead className="">Date</TableHead>
+              <TableHead className="text-right">Views</TableHead>
+              <TableHead className="text-right">Comments</TableHead>
+              <TableHead className="text-right pr-6">Likes</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {Array.from({ length: 5 }).map((_, index) => (
+              <TableRow key={index}>
+                <TableCell className="pl-6">
+                  <div className="flex items-center gap-4">
+                    <Skeleton className="h-20 w-36" />
+                    <div className="flex flex-col gap-2">
+                      <Skeleton className="h-4 w-[100px]" />
+                      <Skeleton className="h-3 w-[150px]" />
+                    </div>
+                  </div>
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="w-20 h-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="w-16 h-4" />
+                </TableCell>
+                <TableCell>
+                  <Skeleton className="w-24 h-4" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Skeleton className="w-12 h-4 ml-auto" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Skeleton className="w-12 h-4" />
+                </TableCell>
+                <TableCell className="text-right">
+                  <Skeleton className="w-12 h-4" />
+                </TableCell>
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 };
 
@@ -83,7 +140,16 @@ export const VideosSectionSuspense = () => {
                         </div>
                       </div>
                     </TableCell>
-                    <TableCell>visibility</TableCell>
+                    <TableCell>
+                      <div className="flex items-center">
+                        {video.visibility === "private" ? (
+                          <LockIcon className="size-4 mr-2" />
+                        ) : (
+                          <Globe2Icon className="size-4 mr-2" />
+                        )}
+                        {snakeCaseToTitle(video.visibility)}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <div className="flex items-center">
                         {snakeCaseToTitle(video.muxStatus || "error")}
@@ -92,9 +158,9 @@ export const VideosSectionSuspense = () => {
                     <TableCell className="text-sm truncate">
                       {format(new Date(video.createdAt), "yyyy MMM d")}
                     </TableCell>
-                    <TableCell className="text-right">views</TableCell>
-                    <TableCell className="text-right">comment</TableCell>
-                    <TableCell className="text-right pr-6">likes</TableCell>
+                    <TableCell className="text-sm text-right">views</TableCell>
+                    <TableCell className="text-sm text-right">comment</TableCell>
+                    <TableCell className="text-sm text-right pr-6">likes</TableCell>
                   </TableRow>
                 </Link>
               ))}

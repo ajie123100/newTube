@@ -25,6 +25,7 @@ export const VideoThumbnail = ({
           className="w-full h-full object-cover group-hover:opacity-0"
         />
         <Image
+          unoptimized={!!previewUrl} // 如果previewUrl存在，就不进行优化
           src={previewUrl ?? "/placeholder.svg"}
           alt={title}
           fill
