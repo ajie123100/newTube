@@ -1,26 +1,26 @@
 import { relations } from "drizzle-orm";
 import {
-  pgTable,
-  uuid,
-  text,
-  timestamp,
-  uniqueIndex,
-  integer,
-  pgEnum,
-} from "drizzle-orm/pg-core";
-import {
   createInsertSchema,
   createSelectSchema,
   createUpdateSchema,
 } from "drizzle-zod";
+import {
+  boolean,
+  integer,
+  pgEnum,
+  pgTable,
+  text,
+  timestamp,
+  uniqueIndex,
+  uuid,
+} from "drizzle-orm/pg-core";
 
 export const users = pgTable(
   "users",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    clerkId: text("clerk_id").notNull().unique(),
+    clerkId: text("clerk_id").unique().notNull(),
     name: text("name").notNull(),
-    // todo: add Banner fields
     imageUrl: text("image_url").notNull(),
     createdAt: timestamp("created_at").defaultNow().notNull(),
     updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -44,7 +44,7 @@ export const categories = pgTable(
   (t) => [uniqueIndex("name_idx").on(t.name)]
 );
 
-export const categoriesRelations = relations(categories, ({ many }) => ({
+export const categoryRelations = relations(categories, ({ many }) => ({
   videos: many(videos),
 }));
 
@@ -64,27 +64,33 @@ export const videos = pgTable("videos", {
   muxTrackId: text("mux_track_id").unique(),
   muxTrackStatus: text("mux_track_status"),
   thumbnailUrl: text("thumbnail_url"),
+  thumbnailKey: text("thumbnail_key"),
+  isCustomThumbnail: boolean("is_custom_thumbnail").default(false).notNull(),
   previewUrl: text("preview_url"),
+  previewKey: text("preview_key"),
   duration: integer("duration").default(0).notNull(),
   visibility: videoVisibility("visibility").default("private").notNull(),
   userId: uuid("user_id")
-    .notNull()
     .references(() => users.id, {
-      onDelete: "cascade", // 删除用户时，删除视频
-    }), // references 外键引用
+      onDelete: "cascade",
+    })
+    .notNull(),
   categoryId: uuid("category_id").references(() => categories.id, {
-    onDelete: "set null", // 删除分类时，不删除视频
+    onDelete: "set null",
   }),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const videoSelectSchema = createSelectSchema(videos); // 创建查询模式 作用：限制查询字段
-export const videoInsertSchema = createInsertSchema(videos); // 创建插入模式 作用：限制插入字段
-export const videoUpdateSchema = createUpdateSchema(videos); // 创建更新模式 作用：限制更新字段
+export const videoSelectSchema = createSelectSchema(videos);
+export const videoInsertSchema = createInsertSchema(videos);
+export const videoUpdateSchema = createUpdateSchema(videos);
 
 export const videoRelations = relations(videos, ({ one }) => ({
-  user: one(users, { fields: [videos.userId], references: [users.id] }),
+  user: one(users, {
+    fields: [videos.userId],
+    references: [users.id],
+  }),
   category: one(categories, {
     fields: [videos.categoryId],
     references: [categories.id],

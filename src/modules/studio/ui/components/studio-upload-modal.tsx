@@ -1,61 +1,61 @@
-"use client";
-import { ResponsesiveDialog } from "@/components/responsesive-dialog";
-import { Button } from "@/components/ui/button";
-import { trpc } from "@/trpc/client";
-import { Loader2Icon, PlusIcon } from "lucide-react";
-import { toast } from "sonner";
-import { StudioUploader } from "./studio-uploader";
-import { useRouter } from "next/navigation";
+'use client'
+import { ResponsiveModal } from '@/components/responsive-modal'
+import { Button } from '@/components/ui/button'
+import { trpc } from '@/trpc/client'
+import { Loader2Icon, PlusIcon } from 'lucide-react'
+import { toast } from 'sonner'
+import { StudioUploader } from './studio-uploader'
+import { useRouter } from 'next/navigation'
 
 export const StudioUploadModal = () => {
-  const router = useRouter();
-  const utils = trpc.useUtils();
+  const router = useRouter()
+  const utils = trpc.useUtils()
   const create = trpc.videos.create.useMutation({
     onSuccess: () => {
-      toast.success("Video created");
-      utils.studio.getMany.invalidate();
+      toast.success('Video created')
+      utils.studio.getMany.invalidate()
     },
     onError: () => {
-      toast.error("Something went wrong");
+      toast.error('Something went wrong')
     },
-  });
+  })
   const onSuccess = () => {
-    if (!create.data?.video.id) return;
-    create.reset();
-    router.push(`/studio/videos/${create.data?.video.id}`);
-  };
+    if (!create.data?.video.id) return
+    create.reset()
+    router.push(`/studio/videos/${create.data?.video.id}`)
+  }
   return (
     <>
-      <ResponsesiveDialog
-        title="Upload a Video"
-        open={!!create.data}
+      <ResponsiveModal
+        title='Upload a Video'
+        open={!!create.data?.url}
         onOpenChange={() => {
-          create.reset();
+          create.reset()
         }}
       >
         {create.data?.url ? (
           <StudioUploader
             onSuccess={() => {
-              onSuccess();
+              onSuccess()
             }}
             endpoint={create.data?.url}
           />
         ) : (
-          <Loader2Icon className="animate-spin" />
+          <Loader2Icon className='animate-spin' />
         )}
-      </ResponsesiveDialog>
+      </ResponsiveModal>
       <Button
-        variant={"secondary"}
+        variant={'secondary'}
         onClick={() => create.mutate()}
         disabled={create.isPending}
       >
         {create.isPending ? (
-          <Loader2Icon className="animate-spin" />
+          <Loader2Icon className='animate-spin' />
         ) : (
           <PlusIcon />
         )}
         Create
       </Button>
     </>
-  );
-};
+  )
+}

@@ -7,11 +7,10 @@ import { eq } from 'drizzle-orm'
 
 export async function POST(req: Request) {
   const SIGNING_SECRET = process.env.CLERK_SIGNING_SECRET
-  console.log(SIGNING_SECRET);
-  
+
   if (!SIGNING_SECRET) {
     throw new Error(
-      'Error: Please add SIGNING_SECRET from Clerk Dashboard to .env or .env',
+      'Error: Please add CLERK_SIGNING_SECRET from Clerk Dashboard to .env or .env',
     )
   }
 
@@ -56,8 +55,7 @@ export async function POST(req: Request) {
   const eventType = evt.type
 
   if (eventType === 'user.created') {
-    const { data } = evt
-
+    const data = evt.data
     await db.insert(users).values({
       clerkId: data.id,
       name: `${data.first_name} ${data.last_name}`,
@@ -66,21 +64,24 @@ export async function POST(req: Request) {
   }
 
   if (eventType === 'user.deleted') {
-    const { data } = evt
+    const data = evt.data
     if (!data.id) {
-      return new Response('Error: Missing user id', { status: 400 })
+      return new Response('Error: Missing user id', {
+        status: 400,
+      })
     }
     await db.delete(users).where(eq(users.clerkId, data.id))
   }
 
   if (eventType === 'user.updated') {
-    const { data } = evt
-
-    await db.update(users).set({
-      name: `${data.first_name} ${data.last_name}`,
-      imageUrl: data.image_url,
-    }).where(eq(users.clerkId, data.id))
+    const data = evt.data
+    await db
+      .update(users)
+      .set({
+        name: `${data.first_name} ${data.last_name}`,
+        imageUrl: data.image_url,
+      })
+      .where(eq(users.clerkId, data.id))
   }
-
   return new Response('Webhook received', { status: 200 })
 }

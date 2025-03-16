@@ -9,7 +9,6 @@ import {
 import { useAuth, useClerk } from "@clerk/nextjs";
 import { FlameIcon, HomeIcon, PlaySquareIcon } from "lucide-react";
 import Link from "next/link";
-import React from "react";
 
 const items = [
   {

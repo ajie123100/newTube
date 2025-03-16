@@ -1,22 +1,21 @@
-import { useIsMobile } from "@/hooks/use-mobile";
-import React from "react";
-import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "./ui/drawer";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "./ui/dialog";
+import { useIsMobile } from '@/hooks/use-mobile'
+import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from './ui/drawer'
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog'
 
 interface ResponsesiveDialogProps {
-  children: React.ReactNode;
-  open: boolean;
-  title: string;
-  onOpenChange: (open: boolean) => void;
+  children: React.ReactNode
+  open: boolean
+  title: string
+  onOpenChange: (open: boolean) => void
 }
 
-export const ResponsesiveDialog = ({
+export const ResponsiveModal = ({
   children,
   open,
   title,
   onOpenChange,
 }: ResponsesiveDialogProps) => {
-  const isMobile = useIsMobile();
+  const isMobile = useIsMobile()
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
@@ -27,7 +26,7 @@ export const ResponsesiveDialog = ({
           {children}
         </DrawerContent>
       </Drawer>
-    );
+    )
   }
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -38,5 +37,5 @@ export const ResponsesiveDialog = ({
         {children}
       </DialogContent>
     </Dialog>
-  );
-};
+  )
+}

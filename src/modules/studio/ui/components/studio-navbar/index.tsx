@@ -1,7 +1,6 @@
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import Image from 'next/image'
 import Link from 'next/link'
-import React from 'react'
 import { AuthButton } from '@/modules/auth/ui/compontents/auth-button'
 import { StudioUploadModal } from '../studio-upload-modal'
 
