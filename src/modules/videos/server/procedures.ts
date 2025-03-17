@@ -1,28 +1,104 @@
 import { db } from "@/db";
-import { users, videos, videoUpdateSchema } from "@/db/schema";
+import {
+  subscriptions,
+  users,
+  videoReactions,
+  videos,
+  videoUpdateSchema,
+  videoViews,
+} from "@/db/schema";
 import { mux } from "@/lib/mux";
 import { workflow } from "@/lib/workflow";
-import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
+import {
+  baseProcedure,
+  createTRPCRouter,
+  protectedProcedure,
+} from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
-import { and, eq, getTableColumns } from "drizzle-orm";
+import { and, eq, getTableColumns, inArray, isNotNull } from "drizzle-orm";
 import { UTApi } from "uploadthing/server";
 import { z } from "zod";
 
 export const videosRouter = createTRPCRouter({
-  getOne: protectedProcedure
+  getOne: baseProcedure
     .input(z.object({ id: z.string().uuid() }))
-    .query(async ({ input }) => {
-      const { id } = input;
+    .query(async ({ ctx, input }) => {
+      const { clerkUserId } = ctx;
+      if (!input.id) {
+        throw new TRPCError({ code: "BAD_REQUEST", message: "视频ID不能为空" });
+      }
+
+      // 获取当前登录用户信息（如果有）
+      let userId;
+      let user;
+      if (clerkUserId) {
+        [user] = await db
+          .select()
+          .from(users)
+          .where(eq(users.clerkId, clerkUserId));
+        if (user) {
+          userId = user.id;
+        }
+      }
+
+      const { id: videoId } = input;
+      const viewerReactions = db.$with("viewer_reactions").as(
+        db
+          .select({
+            videoId: videoReactions.videoId,
+            type: videoReactions.type,
+          })
+          .from(videoReactions)
+          .where(inArray(videoReactions.userId, userId ? [userId] : []))
+      );
+
+      const viewerSubscriptions = db.$with("viewer_subscriptions").as(
+        db
+          .select()
+          .from(subscriptions)
+          .where(inArray(subscriptions.viewerId, userId ? [userId] : []))
+      );
+
       const [video] = await db
+        .with(viewerReactions, viewerSubscriptions)
         .select({
           ...getTableColumns(videos),
           user: {
             ...getTableColumns(users),
+            subscriberCount: db.$count(
+              subscriptions,
+              eq(subscriptions.creatorId, users.id)
+            ),
+            viewerSubscribed: isNotNull(viewerSubscriptions.viewerId).mapWith(
+              Boolean
+            ),
           },
+          viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
+          likeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "like")
+            )
+          ),
+          dislikeCount: db.$count(
+            videoReactions,
+            and(
+              eq(videoReactions.videoId, videos.id),
+              eq(videoReactions.type, "dislike")
+            )
+          ),
+          viewerReaction: viewerReactions.type,
         })
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
-        .where(eq(videos.id, id));
+        .leftJoin(viewerReactions, eq(viewerReactions.videoId, videos.id))
+        .leftJoin(
+          viewerSubscriptions,
+          eq(viewerSubscriptions.creatorId, users.id)
+        )
+        .where(eq(videos.id, videoId));
+      // .groupBy(videos.id,users.id,viewerReactions.type);
 
       if (!video) throw new TRPCError({ code: "NOT_FOUND" });
 
@@ -119,6 +195,20 @@ export const videosRouter = createTRPCRouter({
     .input(z.object({ id: z.string().uuid() }))
     .mutation(async ({ ctx, input }) => {
       const { id: userID } = ctx.user;
+
+      // 先检查视频是否存在
+      const [video] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userID)));
+
+      if (!video) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "视频不存在或无权限删除",
+        });
+      }
+
       const [removedVideo] = await db
         .delete(videos)
         .where(and(eq(videos.id, input.id), eq(videos.userId, userID)))
@@ -151,7 +241,27 @@ export const videosRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       const { id: userId } = ctx.user;
       if (!input.id) {
-        throw new TRPCError({ code: "BAD_REQUEST" });
+        throw new TRPCError({ code: "BAD_REQUEST", message: "视频ID不能为空" });
+      }
+
+      // 检查视频状态
+      const [video] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
+
+      if (!video) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "视频不存在或无权限更新",
+        });
+      }
+
+      if (video.muxStatus !== "ready") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "视频尚未处理完成，无法更新",
+        });
       }
       const [updatedVideo] = await db
         .update(videos)
@@ -173,38 +283,67 @@ export const videosRouter = createTRPCRouter({
 
   create: protectedProcedure.mutation(async ({ ctx }) => {
     const { id: userId } = ctx.user;
-    const upload = await mux.video.uploads.create({
-      new_asset_settings: {
-        passthrough: userId,
-        playback_policy: ["public"],
-        // Will work on premium
-        // mp4_support: 'standard'
-        input: [
-          {
-            generated_subtitles: [
+    try {
+      const upload = await mux.video.uploads
+        .create({
+          new_asset_settings: {
+            passthrough: userId,
+            playback_policy: ["public"],
+            input: [
               {
-                language_code: "en",
-                name: "English",
+                generated_subtitles: [
+                  {
+                    language_code: "en",
+                    name: "English",
+                  },
+                ],
               },
             ],
           },
-        ],
-      },
-      cors_origin: "*",
-    });
-    const [video] = await db
-      .insert(videos)
-      .values({
-        userId,
-        title: "untitled",
-        muxStatus: "waiting",
-        muxUploadId: upload.id,
-      })
-      .returning();
+          cors_origin: "*",
+        })
+        .catch((error) => {
+          console.error("Mux upload creation failed:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "视频上传初始化失败",
+          });
+        });
 
-    return {
-      video: video,
-      url: upload.url,
-    };
+      if (!upload?.url || !upload?.id) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "无法获取上传URL",
+        });
+      }
+
+      const [video] = await db
+        .insert(videos)
+        .values({
+          userId,
+          title: "untitled",
+          muxStatus: "waiting",
+          muxUploadId: upload.id,
+        })
+        .returning()
+        .catch((error) => {
+          console.error("Database insertion failed:", error);
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "视频信息保存失败",
+          });
+        });
+
+      return {
+        video: video,
+        url: upload.url,
+      };
+    } catch (error) {
+      console.error("Video creation failed:", error);
+      throw new TRPCError({
+        code: "INTERNAL_SERVER_ERROR",
+        message: "视频创建失败，请稍后重试",
+      });
+    }
   }),
 });

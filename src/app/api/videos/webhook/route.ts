@@ -56,7 +56,6 @@ export const POST = async (request: Request) => {
       console.log(2);
       const data = payload.data as VideoAssetReadyWebhookEvent["data"];
       const playbackId = data.playback_ids?.[0].id;
-      console.log(playbackId);
 
       if (!data.upload_id) {
         return new Response("Missing Upload Id", { status: 400 });
@@ -72,7 +71,23 @@ export const POST = async (request: Request) => {
         .where(eq(videos.muxUploadId, data.upload_id));
 
       if (video.length === 0) {
-        return new Response("Video not found", { status: 404 });
+        // 如果视频不存在，说明可能已被删除，直接返回成功响应
+        console.log("Video not found, possibly deleted", {
+          uploadId: data.upload_id,
+        });
+        return new Response("OK", { status: 200 });
+      }
+
+      // 检查视频是否已经处理完成，避免重复处理
+      // 只有当状态发生变化或playbackId不存在时才继续处理
+      if (
+        video[0].muxStatus === data.status &&
+        video[0].muxPlaybackId === playbackId &&
+        video[0].thumbnailUrl &&
+        video[0].previewUrl
+      ) {
+        console.log("Video already processed", { uploadId: data.upload_id });
+        return new Response("Video already processed", { status: 200 });
       }
 
       const tempThumbnailUrl = `https://image.mux.com/${playbackId}/thumbnail.jpg`;
