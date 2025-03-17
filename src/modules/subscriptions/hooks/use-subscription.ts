@@ -25,7 +25,9 @@ export const useSubscription = ({
 
   const handleSuccess = (action: "Subscribed" | "Unsubscribed") => {
     toast.success(`${action}!`);
-    fromVideoId && utils.videos.getOne.invalidate({ id: fromVideoId });
+    if (fromVideoId) {
+      utils.videos.getOne.invalidate({ id: fromVideoId });
+    }
   };
 
   const subscribe = trpc.subscriptions.create.useMutation({
