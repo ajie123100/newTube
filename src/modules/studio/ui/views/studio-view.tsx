@@ -1,5 +1,5 @@
 import React from "react";
-import { VideosSection } from "../section/videos-section";
+import { VideosSection } from "../sections/videos-section";
 
 export const StudioView = () => {
   return (

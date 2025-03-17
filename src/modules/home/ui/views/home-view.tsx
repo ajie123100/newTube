@@ -1,5 +1,5 @@
 import React from "react";
-import { CategoriesSection } from "../section/categories-section";
+import { CategoriesSection } from "../sections/categories-section";
 
 interface HomeViewProps {
   categoryId?: string;
