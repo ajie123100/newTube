@@ -3,13 +3,14 @@
 import { InfiniteScroll } from "@/components/infinite-scroll";
 import { DEFAULT_LIMIT } from "@/constants";
 import { CommentItem } from "@/modules/comments/ui/components/comment-item";
-import { CommentsForm } from "@/modules/comments/ui/components/comments-form";
+import { CommentsForm } from "@/modules/comments/ui/components/comment-form";
 import { trpc } from "@/trpc/client";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
 interface CommentsSectionProps {
   videoId: string;
+  isManual?: boolean;
 }
 
 export const CommentsSection = ({ videoId }: CommentsSectionProps) => {

@@ -27,18 +27,14 @@ export const videosRouter = createTRPCRouter({
       if (!input.id) {
         throw new TRPCError({ code: "BAD_REQUEST", message: "视频ID不能为空" });
       }
-
-      // 获取当前登录用户信息（如果有）
       let userId;
-      let user;
-      if (clerkUserId) {
-        [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.clerkId, clerkUserId));
-        if (user) {
-          userId = user.id;
-        }
+      const [user] = await db
+        .select()
+        .from(users)
+        .where(inArray(users.clerkId, clerkUserId ? [clerkUserId] : []));
+
+      if (user) {
+        userId = user.id;
       }
 
       const { id: videoId } = input;
@@ -139,6 +135,48 @@ export const videosRouter = createTRPCRouter({
       });
       console.log("generateThumbnail-workflowRunId", workflowRunId);
       return workflowRunId;
+    }),
+
+  revalidate: protectedProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      const { id: userId } = ctx.user;
+      const [existingVideo] = await db
+        .select()
+        .from(videos)
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)));
+      if (!existingVideo) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      if (!existingVideo.muxUploadId) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+      const directUpload = await mux.video.uploads.retrieve(
+        existingVideo.muxUploadId
+      );
+
+      if (!directUpload || !directUpload.asset_id) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+
+      const asset = await mux.video.assets.retrieve(directUpload.asset_id);
+      if (!asset) {
+        throw new TRPCError({ code: "BAD_REQUEST" });
+      }
+      const duration = asset.duration ? Math.round(asset.duration * 1000) : 0;
+
+      const [updatedVideo] = await db
+        .update(videos)
+        .set({
+          muxAssetId: asset.id,
+          muxPlaybackId: asset.playback_ids?.[0]?.id,
+          muxStatus: asset.status,
+          duration: duration,
+        })
+        .where(and(eq(videos.id, input.id), eq(videos.userId, userId)))
+        .returning();
+
+      return updatedVideo;
     }),
 
   restoreThumbnail: protectedProcedure
@@ -283,67 +321,38 @@ export const videosRouter = createTRPCRouter({
 
   create: protectedProcedure.mutation(async ({ ctx }) => {
     const { id: userId } = ctx.user;
-    try {
-      const upload = await mux.video.uploads
-        .create({
-          new_asset_settings: {
-            passthrough: userId,
-            playback_policy: ["public"],
-            input: [
+    const upload = await mux.video.uploads.create({
+      new_asset_settings: {
+        passthrough: userId,
+        playback_policy: ["public"],
+        // Will work on premium
+        // mp4_support: 'standard'
+        input: [
+          {
+            generated_subtitles: [
               {
-                generated_subtitles: [
-                  {
-                    language_code: "en",
-                    name: "English",
-                  },
-                ],
+                language_code: "en",
+                name: "English",
               },
             ],
           },
-          cors_origin: "*",
-        })
-        .catch((error) => {
-          console.error("Mux upload creation failed:", error);
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "视频上传初始化失败",
-          });
-        });
+        ],
+      },
+      cors_origin: "*",
+    });
+    const [video] = await db
+      .insert(videos)
+      .values({
+        userId,
+        title: "untitled",
+        muxStatus: "waiting",
+        muxUploadId: upload.id,
+      })
+      .returning();
 
-      if (!upload?.url || !upload?.id) {
-        throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "无法获取上传URL",
-        });
-      }
-
-      const [video] = await db
-        .insert(videos)
-        .values({
-          userId,
-          title: "untitled",
-          muxStatus: "waiting",
-          muxUploadId: upload.id,
-        })
-        .returning()
-        .catch((error) => {
-          console.error("Database insertion failed:", error);
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "视频信息保存失败",
-          });
-        });
-
-      return {
-        video: video,
-        url: upload.url,
-      };
-    } catch (error) {
-      console.error("Video creation failed:", error);
-      throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "视频创建失败，请稍后重试",
-      });
-    }
+    return {
+      video: video,
+      url: upload.url,
+    };
   }),
 });
