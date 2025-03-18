@@ -71,10 +71,10 @@ const VideosSectionSkeleton = () => {
                   <Skeleton className='w-12 h-4 ml-auto' />
                 </TableCell>
                 <TableCell className='text-right'>
-                  <Skeleton className='w-12 h-4' />
+                  <Skeleton className='w-12 h-4 ml-auto' />
                 </TableCell>
                 <TableCell className='text-right'>
-                  <Skeleton className='w-12 h-4' />
+                  <Skeleton className='w-12 h-4 ml-auto' />
                 </TableCell>
               </TableRow>
             ))}

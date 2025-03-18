@@ -27,6 +27,7 @@ const useVideoReaction = (videoId: string) => {
 
   const handleSuccess = () => {
     utils.videos.getOne.invalidate({ id: videoId });
+    utils.playlists.getLiked.invalidate();
   };
 
   const like = trpc.videoReaction.like.useMutation({

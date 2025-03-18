@@ -1,38 +1,40 @@
-"use client";
+'use client'
 import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
-import { useAuth, useClerk } from "@clerk/nextjs";
-import { FlameIcon, HomeIcon, PlaySquareIcon } from "lucide-react";
-import Link from "next/link";
+} from '@/components/ui/sidebar'
+import { useAuth, useClerk } from '@clerk/nextjs'
+import { FlameIcon, HomeIcon, PlaySquareIcon } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname } from 'next/navigation'
 
 const items = [
   {
-    title: "Home",
-    href: "/",
+    title: 'Home',
+    href: '/',
     icon: HomeIcon,
   },
   {
-    title: "Subscriptions",
-    href: "/feed/subscriptions",
+    title: 'Subscribed',
+    href: '/feed/subscribed',
     icon: PlaySquareIcon,
     auth: true,
   },
   {
-    title: "Trending",
-    href: "/feed/trending",
+    title: 'Trending',
+    href: '/feed/trending',
     icon: FlameIcon,
     auth: true,
   },
-];
+]
 
 export const MainSection = () => {
-  const clerk = useClerk();
-  const { isSignedIn } = useAuth();
+  const clerk = useClerk()
+  const { isSignedIn } = useAuth()
+  const pathname = usePathname()
 
   return (
     <SidebarGroup>
@@ -43,17 +45,17 @@ export const MainSection = () => {
               <SidebarMenuButton
                 tooltip={item.title}
                 asChild
-                isActive={false} // todo: Change to look at current pathName
+                isActive={pathname===item.href} // todo: Change to look at current pathName
                 onClick={(e) => {
                   if (item.auth && !isSignedIn) {
-                    e.preventDefault();
-                    return clerk.openSignIn();
+                    e.preventDefault()
+                    return clerk.openSignIn()
                   }
-                }} 
+                }}
               >
-                <Link href={item.href} className="flex items-center gap-4">
+                <Link href={item.href} className='flex items-center gap-4'>
                   <item.icon />
-                  <span className="text-sm">{item.title}</span>
+                  <span className='text-sm'>{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -61,5 +63,5 @@ export const MainSection = () => {
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  );
-};
+  )
+}
