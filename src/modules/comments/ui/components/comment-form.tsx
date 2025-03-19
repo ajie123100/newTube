@@ -2,7 +2,6 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
-import { THUMBNAIL_FALLBACK } from "@/modules/videos/constants";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
 import { commentInsertSchema } from "@/db/schema";
@@ -17,7 +16,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 
-interface CommentsFormProps {
+interface CommentFormProps {
   videoId: string;
   parentId?: string;
   onSuccess?: () => void;
@@ -25,13 +24,13 @@ interface CommentsFormProps {
   variant?: "reply" | "comment";
 }
 
-export const CommentsForm = ({
+export const CommentForm = ({
   videoId,
   onSuccess,
   parentId,
   variant = "comment",
   onCancel,
-}: CommentsFormProps) => {
+}: CommentFormProps) => {
   const clerk = useClerk();
   const { user } = useUser();
   const utils = trpc.useUtils();

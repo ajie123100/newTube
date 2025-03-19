@@ -28,6 +28,56 @@ export const reactionType = pgEnum("reaction_type", [
 // 该文件定义了整个应用的数据库结构，包括用户、视频、分类、订阅、观看记录和反应等核心功能表
 // 使用 PostgreSQL 作为数据库，通过 Drizzle ORM 进行数据库操作
 
+export const playlistVideos = pgTable(
+  "playlist_videos",
+  {
+    playlistId: uuid("playlist_id")
+      .references(() => playlists.id, { onDelete: "cascade" })
+      .notNull(),
+    videoId: uuid("video_id")
+      .references(() => videos.id, { onDelete: "cascade" })
+      .notNull(),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at").defaultNow().notNull(),
+  },
+  (t) => [
+    primaryKey({
+      name: "playlist_videos_pk",
+      columns: [t.playlistId, t.videoId],
+    }),
+  ]
+);
+
+export const playlistVideoRelations = relations(playlistVideos, ({ one }) => ({
+  playlist: one(playlists, {
+    fields: [playlistVideos.playlistId],
+    references: [playlists.id],
+  }),
+  video: one(videos, {
+    fields: [playlistVideos.videoId],
+    references: [videos.id],
+  }),
+}));
+
+export const playlists = pgTable("playlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: text("name").notNull(),
+  description: text("description"),
+  userId: uuid("user_id")
+    .references(() => users.id, { onDelete: "cascade" })
+    .notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const playlistRelations = relations(playlists, ({ one, many }) => ({
+  user: one(users, {
+    fields: [playlists.userId],
+    references: [users.id],
+  }),
+  playlistVideos: many(playlistVideos),
+}));
+
 // 用户表：存储应用的用户信息
 export const users = pgTable(
   "users",
@@ -36,6 +86,8 @@ export const users = pgTable(
     clerkId: text("clerk_id").unique().notNull(), // Clerk认证服务的用户ID
     name: text("name").notNull(), // 用户名称
     imageUrl: text("image_url").notNull(), // 用户头像URL
+    bannerUrl: text("banner_url"), // 用户背景图片URL
+    bannerKey: text("banner_key"),
     createdAt: timestamp("created_at").defaultNow().notNull(), // 创建时间
     updatedAt: timestamp("updated_at").defaultNow().notNull(), // 更新时间
   },
@@ -57,6 +109,7 @@ export const userRelations = relations(users, ({ many }) => ({
   }),
   comments: many(comments),
   commentReactions: many(commentReactions),
+  playlists: many(playlists),
 }));
 
 // 订阅表：存储用户之间的关注关系
@@ -107,7 +160,7 @@ export const categories = pgTable(
     createdAt: timestamp("created_at").defaultNow().notNull(), // 创建时间
     updatedAt: timestamp("updated_at").defaultNow().notNull(), // 更新时间
   },
-  (t) => [uniqueIndex("name_idx").on(t.name)]
+  (t) => [uniqueIndex("category_name_idx").on(t.name)]
 );
 
 export const categoryRelations = relations(categories, ({ many }) => ({
@@ -167,6 +220,7 @@ export const videoRelations = relations(videos, ({ one, many }) => ({
   views: many(videoViews),
   videoReactions: many(videoReactions),
   comments: many(comments),
+  playlistVideos: many(playlistVideos),
 }));
 
 export const comments = pgTable(
@@ -212,8 +266,8 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
     relationName: "comments_parent_id_fkey",
   }),
   reactions: many(commentReactions),
-  replies: many(comments,{
-    relationName:"comments_parent_id_fkey"
+  replies: many(comments, {
+    relationName: "comments_parent_id_fkey",
   }),
 }));
 

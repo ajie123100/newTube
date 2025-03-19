@@ -1,4 +1,4 @@
-'use client'
+"use client";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -6,35 +6,37 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from '@/components/ui/sidebar'
-import { useAuth, useClerk } from '@clerk/nextjs'
-import { HistoryIcon, ListVideoIcon, ThumbsUpIcon } from 'lucide-react'
-import Link from 'next/link'
+} from "@/components/ui/sidebar";
+import { useAuth, useClerk } from "@clerk/nextjs";
+import { HistoryIcon, ListVideoIcon, ThumbsUpIcon } from "lucide-react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const items = [
   {
-    title: 'History',
-    href: '/playlists/history',
+    title: "History",
+    href: "/playlists/history",
     icon: HistoryIcon,
     auth: true,
   },
   {
-    title: 'Liked videos',
-    href: '/playlists/liked',
+    title: "Liked videos",
+    href: "/playlists/liked",
     icon: ThumbsUpIcon,
     auth: true,
   },
   {
-    title: 'All playlists',
-    href: '/playlists',
+    title: "All playlists",
+    href: "/playlists",
     icon: ListVideoIcon,
     auth: true,
   },
-]
+];
 
 export const PersonalSection = () => {
-  const clerk = useClerk()
-  const { isSignedIn } = useAuth()
+  const clerk = useClerk();
+  const { isSignedIn } = useAuth();
+  const pathname = usePathname();
   return (
     <SidebarGroup>
       <SidebarGroupLabel>You</SidebarGroupLabel>
@@ -45,17 +47,17 @@ export const PersonalSection = () => {
               <SidebarMenuButton
                 tooltip={item.title}
                 asChild
-                isActive={false} // todo: Change to look at current pathName
+                isActive={pathname === item.href} // todo: Change to look at current pathName
                 onClick={(e) => {
                   if (item.auth && !isSignedIn) {
-                    e.preventDefault()
-                    return clerk.openSignIn()
+                    e.preventDefault();
+                    return clerk.openSignIn();
                   }
                 }}
               >
-                <Link href={item.href} className='flex items-center gap-4'>
+                <Link href={item.href} className="flex items-center gap-4">
                   <item.icon />
-                  <span className='text-sm'>{item.title}</span>
+                  <span className="text-sm">{item.title}</span>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
@@ -63,5 +65,5 @@ export const PersonalSection = () => {
         </SidebarMenu>
       </SidebarGroupContent>
     </SidebarGroup>
-  )
-}
+  );
+};

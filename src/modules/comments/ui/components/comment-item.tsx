@@ -23,7 +23,7 @@ import { useAuth, useClerk } from "@clerk/nextjs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { CommentsForm } from "./comment-form";
+import { CommentForm } from "./comment-form";
 import { CommentReplies } from "./comment-replies";
 
 interface CommentItemProps {
@@ -154,7 +154,7 @@ export const CommentItem = ({
             )}
           </div>
         </div>
-        {comment.user.clerkId !== userId && variant === "comment" && (
+        { variant === "comment" && (
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger asChild>
               <Button variant={"ghost"} size={"icon"} className="size-8">
@@ -186,7 +186,7 @@ export const CommentItem = ({
       </div>
       {isReplyOpen && variant === "comment" && (
         <div className="mt-4 pl-4">
-          <CommentsForm
+          <CommentForm
             parentId={comment.id}
             variant="reply"
             onCancel={() => {
