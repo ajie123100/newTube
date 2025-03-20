@@ -11,6 +11,7 @@ import { ErrorBoundary } from "react-error-boundary";
 
 interface CommentSectionProps {
   videoId: string;
+  isManual?: boolean;
 }
 
 export const CommentsSection = ({ videoId }: CommentSectionProps) => {
@@ -39,7 +40,7 @@ const CommentsSectionSuspense = ({ videoId }: CommentSectionProps) => {
     },
     {
       getNextPageParam: (lastPage) => lastPage.nextCursor,
-    },
+    }
   );
   return (
     <div className="mt-6">
@@ -56,6 +57,7 @@ const CommentsSectionSuspense = ({ videoId }: CommentSectionProps) => {
               <CommentItem key={comment.id} comment={comment} />
             ))}
           <InfiniteScroll
+            isManual
             hasNextPage={query.hasNextPage}
             isFetchingNextPage={query.isFetchingNextPage}
             fetchNextPage={query.fetchNextPage}

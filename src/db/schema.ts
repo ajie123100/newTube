@@ -251,7 +251,7 @@ export const comments = pgTable(
   ]
 );
 
-export const commentsRelations = relations(comments, ({ one, many }) => ({
+export const commentRelations = relations(comments, ({ one, many }) => ({
   user: one(users, {
     fields: [comments.userId],
     references: [users.id],
@@ -265,10 +265,10 @@ export const commentsRelations = relations(comments, ({ one, many }) => ({
     references: [comments.id],
     relationName: "comments_parent_id_fkey",
   }),
-  reactions: many(commentReactions),
   replies: many(comments, {
     relationName: "comments_parent_id_fkey",
   }),
+  reactions: many(commentReactions),
 }));
 
 export const commentSelectSchema = createSelectSchema(comments);

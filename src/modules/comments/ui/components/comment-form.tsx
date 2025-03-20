@@ -4,7 +4,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { UserAvatar } from "@/components/user-avatar";
 import { useClerk, useUser } from "@clerk/nextjs";
 import { useForm } from "react-hook-form";
-import { commentInsertSchema } from "@/db/schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { trpc } from "@/trpc/client";
 import { toast } from "sonner";
@@ -18,11 +17,20 @@ import {
 
 interface CommentFormProps {
   videoId: string;
-  parentId?: string;
   onSuccess?: () => void;
   onCancel?: () => void;
-  variant?: "reply" | "comment";
+  variant?: "comment" | "reply";
+  parentId?: string;
 }
+
+const commentInsertSchema = z.object({
+  id: z.string().uuid().optional(),
+  parentId: z.string().nullable().optional(),
+  videoId: z.string(),
+  value: z.string().min(1, "Comment cannot be empty"),
+  createdAt: z.date().optional(),
+  updatedAt: z.date().optional(),
+});
 
 export const CommentForm = ({
   videoId,
@@ -35,14 +43,16 @@ export const CommentForm = ({
   const { user } = useUser();
   const utils = trpc.useUtils();
   const create = trpc.comments.create.useMutation();
+
   const form = useForm<z.infer<typeof commentInsertSchema>>({
-    resolver: zodResolver(commentInsertSchema.omit({ userId: true })),
+    resolver: zodResolver(commentInsertSchema),
     defaultValues: {
       parentId: parentId,
-      videoId: videoId,
+      videoId,
       value: "",
     },
   });
+
   const handleSubmit = (value: z.infer<typeof commentInsertSchema>) => {
     create.mutate(value, {
       onSuccess: () => {

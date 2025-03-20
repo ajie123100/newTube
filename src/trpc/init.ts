@@ -5,8 +5,6 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 import { cache } from "react";
 import superjson from "superjson";
-import { Redis } from "@upstash/redis";
-import { Ratelimit } from "@upstash/ratelimit";
 import { ratelimit } from "@/lib/ratelimit";
 export const createTRPCContext = cache(async () => {
   /**

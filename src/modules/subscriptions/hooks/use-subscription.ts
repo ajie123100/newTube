@@ -16,16 +16,10 @@ export const useSubscription = ({
   const clerk = useClerk();
   const utils = trpc.useUtils();
 
-  const handleError = (error: any) => {
-    toast.error("Something went wrong!");
-    if (error?.data?.code === "UNAUTHORIZED") {
-      clerk.openSignIn();
-    }
-  };
-
   const handleSuccess = (action: "Subscribed" | "Unsubscribed") => {
     toast.success(`${action}!`);
     utils.videos.getManySubscribed.invalidate();
+    utils.videos.getOne.invalidate({ id: userId });
     if (fromVideoId) {
       utils.videos.getOne.invalidate({ id: fromVideoId });
     }
@@ -33,12 +27,22 @@ export const useSubscription = ({
 
   const subscribe = trpc.subscriptions.create.useMutation({
     onSuccess: () => handleSuccess("Subscribed"),
-    onError: handleError,
+    onError: (error) => {
+      toast.error("Something went wrong!");
+      if (error.data?.code === "UNAUTHORIZED") {
+        clerk.openSignIn();
+      }
+    },
   });
 
   const unsubscribe = trpc.subscriptions.remove.useMutation({
     onSuccess: () => handleSuccess("Unsubscribed"),
-    onError: handleError,
+    onError: (error) => {
+      toast.error("Something went wrong!");
+      if (error.data?.code === "UNAUTHORIZED") {
+        clerk.openSignIn();
+      }
+    },
   });
 
   const isPending = subscribe.isPending || unsubscribe.isPending;

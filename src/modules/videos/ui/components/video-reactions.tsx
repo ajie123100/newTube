@@ -18,13 +18,6 @@ const useVideoReaction = (videoId: string) => {
   const clerk = useClerk();
   const utils = trpc.useUtils();
 
-  const handleError = (error: any) => {
-    toast.error("Something went wrong");
-    if (error.data?.code === "UNAUTHORIZED") {
-      clerk.openSignIn();
-    }
-  };
-
   const handleSuccess = () => {
     utils.videos.getOne.invalidate({ id: videoId });
     utils.playlists.getLiked.invalidate();
@@ -32,12 +25,22 @@ const useVideoReaction = (videoId: string) => {
 
   const like = trpc.videoReaction.like.useMutation({
     onSuccess: handleSuccess,
-    onError: handleError,
+    onError: (error) => {
+      toast.error("Something went wrong");
+      if (error.data?.code === "UNAUTHORIZED") {
+        clerk.openSignIn();
+      }
+    },
   });
 
   const dislike = trpc.videoReaction.dislike.useMutation({
     onSuccess: handleSuccess,
-    onError: handleError,
+    onError: (error) => {
+      toast.error("Something went wrong");
+      if (error.data?.code === "UNAUTHORIZED") {
+        clerk.openSignIn();
+      }
+    },
   });
 
   return { like, dislike };

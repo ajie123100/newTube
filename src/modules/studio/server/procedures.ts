@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { db } from "@/db";
-import { videoReactions, videos, videoViews } from "@/db/schema";
+import { comments, videoReactions, videos, videoViews } from "@/db/schema";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { eq, and, or, lt, desc, getTableColumns } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -39,13 +39,10 @@ export const studioRouter = createTRPCRouter({
         .select({
           ...getTableColumns(videos),
           viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
-          likeCount: db.$count(
-            videoReactions,
-            and(
-              eq(videoReactions.videoId, videos.id),
-              eq(videoReactions.type, "like")
-            )
-          ),
+          likeCount: db
+            .$count(videoReactions, and(eq(videoReactions.type, "like")))
+            .as("likeCount"),
+          commentCount: db.$count(comments, eq(comments.videoId, videos.id)),
         })
         .from(videos)
         .leftJoin(videoReactions, eq(videoReactions.videoId, videos.id))
@@ -63,6 +60,7 @@ export const studioRouter = createTRPCRouter({
               : undefined
           )
         )
+        .groupBy(videos.id)
         .orderBy(desc(videos.updatedAt), desc(videos.id))
         .limit(limit + 1); // add 1 to check if there are more data
 

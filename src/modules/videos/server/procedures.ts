@@ -206,7 +206,6 @@ export const videosRouter = createTRPCRouter({
           ...getTableColumns(videos),
           user: users,
           viewCount: db.$count(videoViews, eq(videoViews.videoId, videos.id)),
-          
           likeCount: db.$count(
             videoReactions,
             and(
@@ -225,6 +224,7 @@ export const videosRouter = createTRPCRouter({
         .from(videos)
         .innerJoin(users, eq(videos.userId, users.id))
         .leftJoin(videoReactions, eq(videoReactions.videoId, videos.id))
+        .leftJoin(videoViews, eq(videoViews.videoId, videos.id))
         .where(
           and(
             eq(videos.visibility, "public"),
